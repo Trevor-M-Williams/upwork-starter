@@ -1,17 +1,16 @@
-"use client";
-import { Button } from "@/components/ui/button";
-import { getFiles } from "@/server/actions/files";
+import { redirect } from "next/navigation";
+import { checkAdmin } from "@/server/actions/admin";
 
-export default function Admin() {
-  const handleGetFiles = async () => {
-    const files = await getFiles();
-    console.log(files);
-  };
+export default async function Admin() {
+  const isAdmin = await checkAdmin();
+
+  if (!isAdmin) {
+    redirect("/dashboard");
+  }
 
   return (
-    <div>
+    <div className="p-6">
       <h1>Admin</h1>
-      <Button onClick={handleGetFiles}>Get Files</Button>
     </div>
   );
 }

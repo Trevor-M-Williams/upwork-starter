@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { checkAdmin } from "@/server/actions/admin";
+import { checkAdmin } from "@/server/server-only/admin";
+import { TodoList } from "./components/todo-list";
+import { getTodos } from "@/server/actions/todos";
 
 export default async function Admin() {
   const isAdmin = await checkAdmin();
@@ -8,9 +10,12 @@ export default async function Admin() {
     redirect("/dashboard");
   }
 
+  const todos = await getTodos();
+
   return (
     <div className="p-6">
-      <h1>Admin</h1>
+      <h1 className="mb-6 text-2xl font-bold">Admin</h1>
+      <TodoList initialTodos={todos} />
     </div>
   );
 }

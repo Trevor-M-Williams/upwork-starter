@@ -1,4 +1,5 @@
-import Sidebar from "@/components/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function DashboardLayout({
   children,
@@ -6,9 +7,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="absolute inset-0 flex">
-      <Sidebar />
-      <div className="flex-grow">{children}</div>
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 }

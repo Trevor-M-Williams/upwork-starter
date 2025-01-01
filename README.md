@@ -1,43 +1,53 @@
-# Next.js Template: Clerk + Vercel Postgres + Drizzle ORM + Shadcn UI
+# Next.js Application Template
 
-This is a [Next.js](https://nextjs.org/docs) template that includes authentication with [Clerk](https://clerk.com/docs/references/nextjs/overview), a [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) database, [Drizzle ORM](https://orm.drizzle.team/docs/overview), and a basic dashboard built with [Shadcn UI](https://ui.shadcn.com/docs).
+## Stack
+
+- 🔐 Clerk Auth
+- 📊 PostgreSQL + Drizzle ORM
+- 🧩 Shadcn/ui
 
 ## Getting Started
 
-First, install dependencies:
+1. Clone the repository:
 
-```bash
-pnpm install
-```
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-Copy the `.env.example` file to `.env`.
+3. Set up environment variables:
+   Create a `.env` file in the root directory with the following variables:
+   ```env
+   POSTGRES_URL=your_postgres_connection_string
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+   CLERK_SECRET_KEY=your_clerk_secret_key
+   ```
 
-```bash
-cp .env.example .env
-```
+   *Note: .env.local does not play nicely with drizzle*
 
-Create a new [Clerk](https://dashboard.clerk.com) application and a new [Vercel Postgres](https://vercel.com) instance and add the credentials to the `.env` file.
+4. Initialize the database:
+   ```bash
+   pnpm db:push
+   ```
 
-Once your database is created, run the following command to push the initial schema to it:
+5. Run the development server:
+   ```bash
+   pnpm dev
+   ```
 
-```bash
-pnpm db:push
-```
+6. Run Drizzle Studio to view the database while developing
+   ```bash
+   pnpm db:studio
+   ```
 
-For interacting with the database during development, you can use the following command to start Drizzle studio:
+## Database
 
-```bash
-pnpm db:studio
-```
+This template uses Drizzle ORM with PostgreSQL. The schema is defined in server/db/schema.ts. Database operations are handled in the server/actions directory.
 
-To start the dev server run:
+## Authentication
 
-```bash
-pnpm dev
-```
+Authentication is handled by Clerk. Protected routes are configured in the middleware.ts file. The dashboard routes are protected by default and require authentication.
 
-## Deploy on Vercel
+## UI Components
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+The project uses a combination of custom components and shadcn/ui. Components are styled using Tailwind CSS with a customized theme configuration. The theme can be modified in the tailwind.config.ts file.

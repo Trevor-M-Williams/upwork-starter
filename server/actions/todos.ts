@@ -8,19 +8,6 @@ export const getTodos = async () => {
   return await db.select().from(todos).orderBy(asc(todos.createdAt));
 };
 
-<<<<<<< HEAD
-export const createTodo = async (text: string) => {
-  if (text.trim() === "error") {
-    return { error: true, todo: null };
-  }
-
-  try {
-    const newTodo = await db.insert(todos).values({ text }).returning();
-    return { error: false, todo: newTodo[0] };
-  } catch (error) {
-    console.error(error);
-    return { error: true, todo: null };
-=======
 export const createTodo = async (id: string, text: string) => {
   if (text.trim() === "error") {
     return { error: true, message: "Failed to create todo" };
@@ -32,7 +19,6 @@ export const createTodo = async (id: string, text: string) => {
   } catch (error) {
     console.error(error);
     return { error: true, message: "Failed to create todo" };
->>>>>>> template/main
   }
 };
 

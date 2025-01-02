@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   AudioWaveform,
+<<<<<<< HEAD
   BookOpen,
   Bot,
   Command,
@@ -16,6 +17,14 @@ import {
 
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
+=======
+  GalleryVerticalEnd,
+  Home,
+  Settings,
+} from "lucide-react";
+
+import { NavLinks } from "@/components/nav-links";
+>>>>>>> template/main
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -26,7 +35,10 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+<<<<<<< HEAD
 // This is sample data.
+=======
+>>>>>>> template/main
 const data = {
   user: {
     name: "John Doe",
@@ -44,6 +56,7 @@ const data = {
       logo: AudioWaveform,
       plan: "Startup",
     },
+<<<<<<< HEAD
     {
       name: "Evil Corp.",
       logo: Command,
@@ -152,6 +165,19 @@ const data = {
       name: "Travel",
       url: "#",
       icon: Map,
+=======
+  ],
+  links: [
+    {
+      name: "Home",
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      name: "Admin",
+      url: "/dashboard/admin",
+      icon: Settings,
+>>>>>>> template/main
     },
   ],
 };
@@ -163,8 +189,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
+<<<<<<< HEAD
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
+=======
+        <NavLinks links={data.links} />
+>>>>>>> template/main
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

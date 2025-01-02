@@ -13,7 +13,7 @@ export default async function Admin() {
   const todos = await getTodos();
 
   return (
-    <div className="p-6">
+    <div>
       <h1 className="mb-6 text-2xl font-bold">Admin</h1>
       <TodoList initialTodos={todos} />
     </div>

@@ -10,9 +10,9 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="flex h-full flex-col">
         <Header />
-        <div className="px-6">{children}</div>
+        <div className="flex grow flex-col p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   AudioWaveform,
+  Building,
   GalleryVerticalEnd,
   Home,
   Settings,
@@ -42,6 +43,11 @@ const data = {
       name: "Home",
       url: "/dashboard",
       icon: Home,
+    },
+    {
+      name: "Companies",
+      url: "/dashboard/companies",
+      icon: Building,
     },
     {
       name: "Admin",

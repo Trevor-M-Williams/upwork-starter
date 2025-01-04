@@ -19,6 +19,7 @@ export const createCompany = async (name: string, ticker: string) => {
   try {
     await db.insert(companies).values({ name, ticker });
     revalidatePath("/dashboard/companies");
+    getCompanyFinancialData(ticker);
     return { error: false, message: "Company created" };
   } catch (error) {
     console.error(error);
@@ -33,5 +34,24 @@ export const deleteCompany = async (id: string) => {
   } catch (error) {
     console.error(error);
     return { error: true, message: "Failed to delete company" };
+  }
+};
+
+export const getCompanyFinancialData = async (ticker: string) => {
+  console.log("Getting financial data for", ticker);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const revenue = Math.floor(Math.random() * 1000000);
+    await db
+      .update(companies)
+      .set({ revenue, status: "success" })
+      .where(eq(companies.ticker, ticker));
+    console.log("Financial data fetched for", ticker);
+  } catch (error) {
+    console.error(error);
+    await db
+      .update(companies)
+      .set({ status: "error" })
+      .where(eq(companies.ticker, ticker));
   }
 };

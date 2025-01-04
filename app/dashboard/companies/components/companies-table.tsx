@@ -1,5 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { usePolling } from "@/hooks/use-polling";
 import {
   Table,
   TableBody,
@@ -12,6 +14,20 @@ import { Company } from "@/types";
 
 export function CompaniesTable({ companies }: { companies: Company[] }) {
   const router = useRouter();
+  const { startPolling, stopPolling } = usePolling(5000);
+
+  useEffect(() => {
+    const pendingCompanies = companies.some(
+      (company) => company.status === "pending",
+    );
+
+    if (pendingCompanies) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  }, [companies, startPolling, stopPolling]);
+
   return (
     <Table>
       <TableHeader>

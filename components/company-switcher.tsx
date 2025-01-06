@@ -19,13 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-// Add the Company type definition
-type Company = {
-  id: string;
-  name: string;
-  ticker: string;
-  createdAt: Date;
-};
+import { Company } from "@/types";
 
 export function CompanySwitcher({ companies }: { companies: Company[] }) {
   const { isMobile } = useSidebar();

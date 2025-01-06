@@ -49,7 +49,8 @@ export function CustomLineChart({
           minTickGap={32}
           stroke="hsl(var(--border))"
           tickFormatter={(value) => {
-            const date = new Date(value);
+            const [year, month, day] = value.split("-");
+            const date = new Date(Number(year), Number(month) - 1, Number(day));
             return date.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -62,7 +63,13 @@ export function CustomLineChart({
             <ChartTooltipContent
               className="w-[150px]"
               labelFormatter={(value) => {
-                return new Date(value).toLocaleDateString("en-US", {
+                const [year, month, day] = value.split("-");
+                const date = new Date(
+                  Number(year),
+                  Number(month) - 1,
+                  Number(day),
+                );
+                return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",

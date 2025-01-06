@@ -53,7 +53,7 @@ export default async function CompanyPage({
 
   return (
     <div className="space-y-6 @container">
-      <H1>Tesla Inc.</H1>
+      <H1>{company.name}</H1>
 
       <div className="grid grid-cols-1 gap-4 @sm:grid-cols-3">
         <MetricCard title="Revenue" data={revenueData} type="dollars" />
@@ -65,7 +65,11 @@ export default async function CompanyPage({
 
         <MetricCard title="Net Margin" data={netMarginData} type="percentage" />
         <div className="flex @sm:col-span-2">
-          <StockPerformanceCard beta={beta} peRatio={peRatio} />
+          <StockPerformanceCard
+            ticker={company.ticker}
+            beta={beta}
+            peRatio={peRatio}
+          />
         </div>
 
         <MarketShareCard />
@@ -138,13 +142,15 @@ function MetricCard({
 }
 
 async function StockPerformanceCard({
+  ticker,
   beta,
   peRatio,
 }: {
+  ticker: string;
   beta: number;
   peRatio: number;
 }) {
-  const companyData = await getHistoricalData("TSLA", "2024-01-01");
+  const companyData = await getHistoricalData(ticker, "2024-01-01");
   const sp500Data = await getHistoricalData("SPY", "2024-01-01");
 
   const companyPercentChange = convertPricesToPercentChange(
@@ -172,7 +178,7 @@ async function StockPerformanceCard({
       </CardHeader>
       <CardContent className="flex grow flex-col">
         <div className="w-full grow">
-          <CustomLineChart data={chartData} labels={["Tesla", "S&P 500"]} />
+          <CustomLineChart data={chartData} labels={[ticker, "S&P 500"]} />
         </div>
         <div className="mt-4 grid grid-cols-4 place-items-center divide-x divide-gray-200">
           <StockMetric title="1Y Return" value={`${yearReturn}%`} />

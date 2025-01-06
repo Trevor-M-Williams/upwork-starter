@@ -4,12 +4,13 @@ import * as React from "react";
 import {
   AudioWaveform,
   Building,
+  Command,
   GalleryVerticalEnd,
   Home,
-  Settings,
+  Settings2,
 } from "lucide-react";
 
-import { NavLinks } from "@/components/nav-links";
+import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -37,22 +38,27 @@ const data = {
       logo: AudioWaveform,
       plan: "Startup",
     },
-  ],
-  links: [
     {
-      name: "Home",
+      name: "Evil Corp.",
+      logo: Command,
+      plan: "Free",
+    },
+  ],
+  navMain: [
+    {
+      title: "Home",
       url: "/dashboard",
       icon: Home,
     },
     {
-      name: "Companies",
+      title: "Companies",
       url: "/dashboard/companies",
       icon: Building,
     },
     {
-      name: "Admin",
+      title: "Admin",
       url: "/dashboard/admin",
-      icon: Settings,
+      icon: Settings2,
     },
   ],
 };
@@ -64,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavLinks links={data.links} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

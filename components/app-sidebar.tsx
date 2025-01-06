@@ -1,18 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {
-  AudioWaveform,
-  Building,
-  Command,
-  GalleryVerticalEnd,
-  Home,
-  Settings2,
-} from "lucide-react";
+import { Home, Settings2, BarChart } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
+import { CompanySwitcher } from "@/components/company-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Company } from "@/types";
 
 const data = {
   user: {
@@ -27,47 +21,33 @@ const data = {
     email: "john.doe@example.com",
     avatar: "",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
       title: "Home",
-      url: "/dashboard",
+      url: "/",
       icon: Home,
     },
     {
-      title: "Companies",
-      url: "/dashboard/companies",
-      icon: Building,
+      title: "Financials",
+      url: "/financials",
+      icon: BarChart,
     },
     {
       title: "Admin",
-      url: "/dashboard/admin",
+      url: "/admin",
       icon: Settings2,
     },
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  companies,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { companies: Company[] }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <CompanySwitcher companies={companies} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

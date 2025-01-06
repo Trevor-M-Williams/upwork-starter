@@ -10,3 +10,7 @@ export async function checkAdmin() {
 
   return false;
 }
+
+export async function getUser() {
+  return await currentUser();
+}

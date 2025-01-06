@@ -4,19 +4,18 @@ import {
   boolean,
   uuid,
   timestamp,
-  integer,
   date,
   decimal,
   uniqueIndex,
   jsonb,
 } from "drizzle-orm/pg-core";
 import {
-  CompanyStatus,
   FinancialStatementPeriod,
   IncomeStatement,
   BalanceSheet,
   CashFlowStatement,
 } from "@/types";
+import { relations } from "drizzle-orm";
 
 export const todos = pgTable("todos", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -29,10 +28,26 @@ export const companies = pgTable("companies", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   ticker: text("ticker").notNull().unique(),
-  status: text("status").$type<CompanyStatus>().default("pending").notNull(),
-  revenue: integer("revenue"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const userCompanies = pgTable(
+  "user_companies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    companyId: uuid("company_id").references(() => companies.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      userCompanyIdx: uniqueIndex("user_company_idx").on(
+        table.userId,
+        table.companyId,
+      ),
+    };
+  },
+);
 
 export const historicalPrices = pgTable(
   "historical_prices",
@@ -80,3 +95,14 @@ export const cashFlowStatements = pgTable("cash_flow_statements", {
   data: jsonb("data").$type<CashFlowStatement>().notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+export const userCompaniesRelations = relations(userCompanies, ({ one }) => ({
+  company: one(companies, {
+    fields: [userCompanies.companyId],
+    references: [companies.id],
+  }),
+}));
+
+export const companiesRelations = relations(companies, ({ many }) => ({
+  userCompanies: many(userCompanies),
+}));

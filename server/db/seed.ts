@@ -20,13 +20,16 @@ const sql = neon(process.env.POSTGRES_URL!);
 const db = drizzle(sql, { schema });
 
 async function seed() {
-  const companyName = "Tesla Inc.";
-  const companyTicker = "TSLA";
+  const companyName = "Apple Inc.";
+  const companyTicker = "AAPL";
 
   console.log("seeding the database");
   try {
     await seedFinancialStatements(companyName, companyTicker);
     console.log("successfully seeded financial statements");
+
+    await seedStockData(companyName, companyTicker);
+    console.log("successfully seeded stock data");
   } catch (error) {
     console.error("Error seeding database:", error);
     process.exit(1);
@@ -50,7 +53,6 @@ async function getOrCreateCompany(companyName: string, companyTicker: string) {
         {
           name: companyName,
           ticker: companyTicker,
-          status: "success",
         },
       ])
       .returning();
@@ -67,13 +69,10 @@ async function seedStockData(companyName: string, companyTicker: string) {
   if (!historicalData) {
     throw new Error("Failed to fetch historical data");
   }
-
-  // delete existing historical prices for this company
   await db
     .delete(schema.historicalPrices)
     .where(eq(schema.historicalPrices.companyId, company.id));
 
-  // insert new historical prices
   await db.insert(schema.historicalPrices).values(
     historicalData.map((data: any) => ({
       companyId: company.id,
@@ -82,8 +81,6 @@ async function seedStockData(companyName: string, companyTicker: string) {
       updatedAt: new Date(),
     })),
   );
-
-  console.log("Seed completed successfully");
 }
 
 async function seedFinancialStatements(

@@ -204,6 +204,28 @@ export async function fetchIncomeStatements(symbol: string) {
   return data;
 }
 
+export async function fetchStockPeers(symbol: string) {
+  const url = `https://financialmodelingprep.com/api/v4/stock_peers?symbol=${symbol}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data;
+}
+
+export async function fetchProfile(symbol: string) {
+  const url = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  return data[0];
+}
+
+export async function fetchFullQuote(symbol: string) {
+  const url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data[0];
+}
+
 // ------------- Helper functions ------------- //
 
 function calculateIsStale(updatedAt: Date, stalePeriodInDays: number): boolean {

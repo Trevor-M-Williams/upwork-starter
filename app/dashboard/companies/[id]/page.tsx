@@ -9,7 +9,8 @@ import { getCompany } from "@/server/actions/companies";
 import {
   getHistoricalData,
   getIncomeStatements,
-  getCashFlowStatements,
+  fetchFullQuote,
+  fetchProfile,
 } from "@/server/actions/financials";
 
 export default async function CompanyPage({
@@ -23,7 +24,12 @@ export default async function CompanyPage({
     return <div>Company not found</div>;
   }
 
-  const incomeStatements = await getIncomeStatements(params.id);
+  const [incomeStatements, profile, quote] = await Promise.all([
+    getIncomeStatements(params.id),
+    fetchProfile(company.ticker),
+    fetchFullQuote(company.ticker),
+  ]);
+
   const revenueData = incomeStatements.slice(-16).map((statement) => ({
     date: statement.date,
     value1: statement.data.revenue,
@@ -42,6 +48,9 @@ export default async function CompanyPage({
     period: statement.data.period,
   }));
 
+  const beta = profile.beta;
+  const peRatio = quote.pe;
+
   return (
     <div className="space-y-6 @container">
       <H1>Tesla Inc.</H1>
@@ -56,7 +65,7 @@ export default async function CompanyPage({
 
         <MetricCard title="Net Margin" data={netMarginData} type="percentage" />
         <div className="flex @sm:col-span-2">
-          <StockPerformanceCard />
+          <StockPerformanceCard beta={beta} peRatio={peRatio} />
         </div>
 
         <MarketShareCard />
@@ -128,7 +137,13 @@ function MetricCard({
   );
 }
 
-async function StockPerformanceCard() {
+async function StockPerformanceCard({
+  beta,
+  peRatio,
+}: {
+  beta: number;
+  peRatio: number;
+}) {
   const companyData = await getHistoricalData("TSLA", "2024-01-01");
   const sp500Data = await getHistoricalData("SPY", "2024-01-01");
 
@@ -147,6 +162,8 @@ async function StockPerformanceCard() {
 
   const yearReturn = Math.round(chartData[chartData.length - 1].value1);
   const alpha = Math.round(yearReturn - chartData[chartData.length - 1].value2);
+  const formattedBeta = formatValue(beta);
+  const formattedPeRatio = formatValue(peRatio);
 
   return (
     <Card className="flex size-full flex-col">
@@ -159,9 +176,9 @@ async function StockPerformanceCard() {
         </div>
         <div className="mt-4 grid grid-cols-4 place-items-center divide-x divide-gray-200">
           <StockMetric title="1Y Return" value={`${yearReturn}%`} />
-          <StockMetric title="P/E" value="35" />
           <StockMetric title="Alpha" value={`${alpha}%`} />
-          <StockMetric title="Beta" value="1.2" />
+          <StockMetric title="Beta" value={formattedBeta} />
+          <StockMetric title="P/E" value={formattedPeRatio} />
         </div>
       </CardContent>
     </Card>

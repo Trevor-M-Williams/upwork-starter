@@ -1,48 +1,65 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { H1 } from "@/components/typography";
-import { getCompany } from "@/server/actions/companies";
-import { CustomAreaChart } from "@/components/charts";
 import { ChartConfig } from "@/components/ui/chart";
-import { cn } from "@/lib/utils";
-import { StockChart } from "@/components/charts/stock-chart";
-import { ChartData, ChartDataWithDate } from "@/types";
+import { CustomAreaChart } from "@/components/charts/area-chart";
+import { CustomLineChart } from "@/components/charts/line-chart";
 import { CustomPieChart } from "@/components/charts/pie-chart";
+import { cn, convertPricesToPercentChange, formatValue } from "@/lib/utils";
+import { getCompany } from "@/server/actions/companies";
+import {
+  getHistoricalData,
+  getIncomeStatements,
+  getCashFlowStatements,
+} from "@/server/actions/financials";
 
 export default async function CompanyPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const company = getMockCompanyData(params.id);
+  const company = await getCompany(params.id);
+
+  if (!company) {
+    return <div>Company not found</div>;
+  }
+
+  const incomeStatements = await getIncomeStatements(params.id);
+  const revenueData = incomeStatements.slice(-16).map((statement) => ({
+    date: statement.date,
+    value1: statement.data.revenue,
+    period: statement.data.period,
+  }));
+
+  const grossMarginData = incomeStatements.slice(-16).map((statement) => ({
+    date: statement.date,
+    value1: statement.data.operatingIncomeRatio * 100,
+    period: statement.data.period,
+  }));
+
+  const netMarginData = incomeStatements.slice(-16).map((statement) => ({
+    date: statement.date,
+    value1: statement.data.netIncomeRatio * 100,
+    period: statement.data.period,
+  }));
 
   return (
-    <div className="space-y-6">
-      <H1>{company.name}</H1>
+    <div className="space-y-6 @container">
+      <H1>Tesla Inc.</H1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 @sm:grid-cols-3">
+        <MetricCard title="Revenue" data={revenueData} type="dollars" />
         <MetricCard
-          title="Revenue"
-          data={company.revenueHistory}
-          type="dollars"
-        />
-        <MetricCard
-          title="Customer Retention Rate"
-          data={company.retentionHistory}
-          type="percentage"
-        />
-        <MetricCard
-          title="Operating Margin"
-          data={company.marginHistory}
+          title="Gross Margin"
+          data={grossMarginData}
           type="percentage"
         />
 
-        <div className="order-4 lg:order-5">
-          <MarketShareCard />
-        </div>
-
-        <div className="order-5 sm:col-span-2 lg:order-4">
+        <MetricCard title="Net Margin" data={netMarginData} type="percentage" />
+        <div className="flex @sm:col-span-2">
           <StockPerformanceCard />
         </div>
+
+        <MarketShareCard />
       </div>
     </div>
   );
@@ -54,22 +71,23 @@ function MetricCard({
   type,
 }: {
   title: string;
-  data: ChartData;
+  data: {
+    date: string;
+    value1: number;
+    period: string;
+  }[];
   type: "dollars" | "percentage";
 }) {
-  let value = data[data.length - 1].value1;
-  let lastValue = data[data.length - 2].value1;
+  const value = data[data.length - 1].value1;
+  const lastValue = data[data.length - 2].value1;
+  const lastPeriod = data[data.length - 2].period;
 
-  if (type === "dollars") {
-    value = Math.round(value / 1_000_000);
-    lastValue = Math.round(lastValue / 1_000_000);
-  }
+  const valueString = formatValue(value);
 
   const percentageChange = ((value - lastValue) / lastValue) * 100;
-  const color = percentageChange > 0 ? "#9f9" : "#f99";
 
   const chartConfig = {
-    value: {
+    value1: {
       label: title,
     },
   } satisfies ChartConfig;
@@ -80,57 +98,69 @@ function MetricCard({
         <CardTitle className="text-sm font-medium text-gray-500">
           {title}
         </CardTitle>
-        <div className="flex items-baseline justify-between">
+        <div className="flex-colitems-baseline flex justify-between">
           <div className="text-5xl font-medium">
             {type === "dollars" && "$"}
-            {value}
+            {valueString}
             {type === "percentage" && "%"}
-            {type === "dollars" && "M"}
           </div>
-          <div
-            className={cn(
-              percentageChange > 0 ? "text-green-500" : "text-red-500",
-            )}
-          >
-            {percentageChange > 0 ? "↑" : "↓"} {percentageChange.toFixed(2)}%
+          <div className="">
+            <div
+              className={cn(
+                percentageChange > 0 ? "text-green-500" : "text-red-500",
+              )}
+            >
+              {percentageChange > 0 ? "↑" : "↓"}{" "}
+              {Math.abs(percentageChange).toFixed(2)}%
+            </div>
+            <div className="text-sm text-gray-500">from {lastPeriod}</div>
           </div>
-        </div>
-        <div className="text-sm text-gray-500">
-          from {lastValue} (last quarter)
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-32 pb-0">
         <CustomAreaChart
           chartData={data}
           chartConfig={chartConfig}
-          color={color}
-          formatValueInMillions={type === "dollars"}
+          color={"#6df"}
         />
       </CardContent>
     </Card>
   );
 }
 
-function StockPerformanceCard() {
-  const chartData = generateStockData(
-    new Date("2024-04-01"),
-    { min: 250, max: 500 },
-    { min: 300, max: 550 },
+async function StockPerformanceCard() {
+  const companyData = await getHistoricalData("TSLA", "2024-01-01");
+  const sp500Data = await getHistoricalData("SPY", "2024-01-01");
+
+  const companyPercentChange = convertPricesToPercentChange(
+    companyData.map((item: any) => item.price),
+  );
+  const sp500PercentChange = convertPricesToPercentChange(
+    sp500Data.map((item: any) => item.price),
   );
 
+  const chartData = companyData.map((item: any, index: any) => ({
+    date: item.date,
+    value1: companyPercentChange[index],
+    value2: sp500PercentChange[index],
+  }));
+
+  const yearReturn = Math.round(chartData[chartData.length - 1].value1);
+  const alpha = Math.round(yearReturn - chartData[chartData.length - 1].value2);
+
   return (
-    <Card>
+    <Card className="flex size-full flex-col">
       <CardHeader>
         <CardTitle>Stock Performance</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-56">
-          <StockChart data={chartData} labels={["Tesla Inc.", "S&P 500"]} />
+      <CardContent className="flex grow flex-col">
+        <div className="w-full grow">
+          <CustomLineChart data={chartData} labels={["Tesla", "S&P 500"]} />
         </div>
         <div className="mt-4 grid grid-cols-4 place-items-center divide-x divide-gray-200">
-          <StockMetric title="1Y Return" value="10%" />
+          <StockMetric title="1Y Return" value={`${yearReturn}%`} />
           <StockMetric title="P/E" value="35" />
-          <StockMetric title="Alpha" value="2.1%" />
+          <StockMetric title="Alpha" value={`${alpha}%`} />
           <StockMetric title="Beta" value="1.2" />
         </div>
       </CardContent>
@@ -149,10 +179,10 @@ function StockMetric({ title, value }: { title: string; value: string }) {
 
 function MarketShareCard() {
   const data = [
-    { name: "chrome", value: 275, fill: "hsl(200, 85%, 45%)" },
-    { name: "safari", value: 200, fill: "hsl(190, 80%, 50%)" },
-    { name: "firefox", value: 187, fill: "hsl(185, 75%, 55%)" },
-    { name: "edge", value: 173, fill: "hsl(180, 70%, 60%)" },
+    { name: "Tesla", value: 275, fill: "hsl(200, 85%, 45%)" },
+    { name: "GM", value: 200, fill: "hsl(190, 80%, 50%)" },
+    { name: "Ford", value: 187, fill: "hsl(185, 75%, 55%)" },
+    { name: "Toyota", value: 173, fill: "hsl(180, 70%, 60%)" },
     { name: "other", value: 90, fill: "hsl(175, 65%, 65%)" },
   ];
 
@@ -161,59 +191,9 @@ function MarketShareCard() {
       <CardHeader>
         <CardTitle>Market Share</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-visible">
         <CustomPieChart data={data} />
       </CardContent>
     </Card>
   );
-}
-
-function generateDummyData(length: number, min: number, max: number) {
-  return Array.from({ length }, () => ({
-    value1: Math.floor(Math.random() * (max - min + 1)) + min,
-  }));
-}
-
-function getMockCompanyData(id: string) {
-  return {
-    id,
-    name: "Tesla Inc.",
-    revenue: 245,
-    lastRevenue: 198,
-    revenueHistory: generateDummyData(10, 150_000_000, 300_000_000),
-    retentionRate: 65.8,
-    lastRetentionRate: 70.5,
-    retentionHistory: generateDummyData(10, 60, 80),
-    operatingMargin: 30.4,
-    lastOperatingMargin: 24.6,
-    marginHistory: generateDummyData(10, 20, 40),
-    marketShare: 28.82,
-    lastMarketShare: 28.5,
-    stockHistory: generateDummyData(10, 500, 800),
-  };
-}
-
-function generateStockData(
-  startDate: Date,
-  value1Range: { min: number; max: number },
-  value2Range: { min: number; max: number },
-  days: number = 90,
-) {
-  const data = [];
-  const date = new Date(startDate);
-
-  for (let i = 0; i < days; i++) {
-    data.push({
-      date: date.toISOString().split("T")[0],
-      value1:
-        Math.floor(Math.random() * (value1Range.max - value1Range.min + 1)) +
-        value1Range.min,
-      value2:
-        Math.floor(Math.random() * (value2Range.max - value2Range.min + 1)) +
-        value2Range.min,
-    });
-    date.setDate(date.getDate() + 1);
-  }
-
-  return data;
 }

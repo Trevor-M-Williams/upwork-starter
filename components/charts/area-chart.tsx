@@ -1,27 +1,25 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { ChartData } from "@/types";
+import { ChartDataWithDate } from "@/types";
 
 export function CustomAreaChart({
   chartData,
   chartConfig,
   color,
-  formatValueInMillions,
 }: {
-  chartData: ChartData;
+  chartData: ChartDataWithDate;
   chartConfig: ChartConfig;
   color: string;
-  formatValueInMillions?: boolean;
 }) {
   return (
-    <ChartContainer config={chartConfig} className="h-16 w-full">
+    <ChartContainer config={chartConfig} className="size-full">
       <AreaChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
         <ChartTooltip
@@ -29,10 +27,24 @@ export function CustomAreaChart({
           content={
             <ChartTooltipContent
               indicator="dot"
-              formatValueInMillions={formatValueInMillions}
               hideIndicator
-              hideLabel
+              labelFormatter={(label) =>
+                new Date(label).toLocaleDateString("en-US", {
+                  month: "2-digit",
+                  year: "2-digit",
+                })
+              }
             />
+          }
+        />
+        <XAxis
+          dataKey="date"
+          ticks={[chartData[1].date, chartData[chartData.length - 1].date]}
+          tickFormatter={(date) =>
+            new Date(date).toLocaleDateString("en-US", {
+              month: "2-digit",
+              year: "2-digit",
+            })
           }
         />
         <Area

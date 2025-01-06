@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
-import { cn } from "@/lib/utils";
+import { cn, formatValue } from "@/lib/utils";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -111,7 +111,6 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: "line" | "dot" | "dashed";
       nameKey?: string;
       labelKey?: string;
-      formatValueInMillions?: boolean;
     }
 >(
   (
@@ -129,7 +128,6 @@ const ChartTooltipContent = React.forwardRef<
       color,
       nameKey,
       labelKey,
-      formatValueInMillions,
     },
     ref,
   ) => {
@@ -242,9 +240,7 @@ const ChartTooltipContent = React.forwardRef<
                       </div>
                       {item.value && (
                         <span className="ml-1 font-mono font-medium tabular-nums text-foreground">
-                          {formatValueInMillions
-                            ? `${(Number(item.value) / 1000000).toFixed(2)}M`
-                            : item.value.toLocaleString()}
+                          {formatValue(Number(item.value))}
                         </span>
                       )}
                     </div>

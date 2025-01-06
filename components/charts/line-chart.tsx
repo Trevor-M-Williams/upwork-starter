@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartDataWithDate } from "@/types";
 
-export function StockChart({
+export function CustomLineChart({
   data,
   labels,
 }: {
@@ -21,9 +21,6 @@ export function StockChart({
   labels: string[];
 }) {
   const chartConfig = {
-    views: {
-      label: "Page Views",
-    },
     ...Object.fromEntries(
       Array.from({ length: labels.length }, (_, i) => [
         `value${i + 1}`,

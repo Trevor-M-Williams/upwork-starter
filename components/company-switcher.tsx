@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { ChevronsUpDown, Plus } from "lucide-react";
 
 import {
@@ -19,9 +20,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { Company } from "@/types";
+import { UserCompany } from "@/types";
 
-export function CompanySwitcher({ companies }: { companies: Company[] }) {
+export function CompanySwitcher({ companies }: { companies: UserCompany[] }) {
+  const router = useRouter();
   const { isMobile } = useSidebar();
   const [activeCompany, setActiveCompany] = React.useState(companies[0]);
 
@@ -57,7 +59,10 @@ export function CompanySwitcher({ companies }: { companies: Company[] }) {
             {companies.map((company, index) => (
               <DropdownMenuItem
                 key={company.id}
-                onClick={() => setActiveCompany(company)}
+                onClick={() => {
+                  setActiveCompany(company);
+                  router.push(`/dashboard/${company.id}`);
+                }}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">

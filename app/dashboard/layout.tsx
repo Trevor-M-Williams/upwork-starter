@@ -9,6 +9,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const companies = await getUserCompanies();
+
   return (
     <SidebarProvider>
       <AppSidebar companies={companies} />

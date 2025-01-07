@@ -12,20 +12,28 @@ import {
   fetchFullQuote,
   fetchProfile,
 } from "@/server/actions/financials";
+import { getUserCompanyByDashboardId } from "@/server/actions/user-companies";
 
-export default async function CompanyPage({
+export default async function FinancialsPage({
   params,
 }: {
-  params: { id: string };
+  params: { dashboardId: string };
 }) {
-  const company = await getCompany(params.id);
+  const userCompany = await getUserCompanyByDashboardId(params.dashboardId);
+  const companyId = userCompany?.companyId;
+
+  if (!companyId) {
+    return <div>Company not found</div>;
+  }
+
+  const company = await getCompany(companyId);
 
   if (!company) {
     return <div>Company not found</div>;
   }
 
   const [incomeStatements, profile, quote] = await Promise.all([
-    getIncomeStatements(params.id),
+    getIncomeStatements("7c4d0370-38ad-4b88-9e9d-3ef2c83fd9a1"),
     fetchProfile(company.ticker),
     fetchFullQuote(company.ticker),
   ]);

@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { userCompanies } from "@/server/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getUser } from "@/server/server-only/auth";
-import { Company } from "@/types";
+import { UserCompany } from "@/types";
 
 export const getUserCompanies = async () => {
   const user = await getUser();
@@ -15,6 +15,7 @@ export const getUserCompanies = async () => {
   const data = await db.query.userCompanies.findMany({
     where: eq(userCompanies.userId, user.id),
     columns: {
+      id: true,
       createdAt: true,
     },
     with: {
@@ -29,19 +30,34 @@ export const getUserCompanies = async () => {
   });
 
   const companies = data
-    .map(({ company, createdAt }) =>
+    .map(({ company, createdAt, id }) =>
       company
         ? {
-            id: company.id,
+            id,
+            companyId: company.id,
             name: company.name,
             ticker: company.ticker,
             createdAt,
           }
         : null,
     )
-    .filter((company): company is Company => company !== null);
+    .filter((company): company is UserCompany => company !== null);
 
   return companies;
+};
+
+export const getUserCompanyByDashboardId = async (dashboardId: string) => {
+  const user = await getUser();
+  if (!user) {
+    return null;
+  }
+
+  return await db.query.userCompanies.findFirst({
+    where: and(
+      eq(userCompanies.userId, user.id),
+      eq(userCompanies.id, dashboardId),
+    ),
+  });
 };
 
 export const createUserCompany = async (companyId: string) => {

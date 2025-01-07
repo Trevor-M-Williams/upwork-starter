@@ -12,5 +12,6 @@ export async function checkAdmin() {
 }
 
 export async function getUser() {
+  // kinda useless but might add functionality later so makes sense to have a central function
   return await currentUser();
 }

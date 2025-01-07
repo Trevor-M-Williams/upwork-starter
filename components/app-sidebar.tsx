@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { Home, Settings2, BarChart } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -13,47 +14,43 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { Company } from "@/types";
-
-const data = {
-  user: {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "",
-  },
-  navMain: [
-    {
-      title: "Home",
-      url: "/dashboard",
-      icon: Home,
-    },
-    {
-      title: "Financials",
-      url: "/dashboard/financials",
-      icon: BarChart,
-    },
-    {
-      title: "Admin",
-      url: "/dashboard/admin",
-      icon: Settings2,
-    },
-  ],
-};
+import { UserCompany } from "@/types";
 
 export function AppSidebar({
   companies,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { companies: Company[] }) {
+}: React.ComponentProps<typeof Sidebar> & { companies: UserCompany[] }) {
+  const pathname = usePathname();
+  const dashboardId = pathname.split("/")[2];
+
+  const links = [
+    {
+      title: "Home",
+      url: `/dashboard/${dashboardId}`,
+      icon: Home,
+    },
+    {
+      title: "Financials",
+      url: `/dashboard/${dashboardId}/financials`,
+      icon: BarChart,
+    },
+    {
+      title: "Admin",
+      url: `/dashboard/${dashboardId}/admin`,
+      icon: Settings2,
+    },
+  ];
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <CompanySwitcher companies={companies} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain links={links} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

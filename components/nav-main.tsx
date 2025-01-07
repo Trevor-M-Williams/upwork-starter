@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/sidebar";
 
 export function NavMain({
-  items,
+  links,
 }: {
-  items: {
+  links: {
     title: string;
     url: string;
     icon?: LucideIcon;
@@ -21,7 +21,7 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarMenu>
-        {items.map((item) => (
+        {links.map((item) => (
           <SidebarMenuItem key={item.title}>
             <Link href={item.url}>
               <SidebarMenuButton tooltip={item.title}>

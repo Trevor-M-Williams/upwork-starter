@@ -22,10 +22,18 @@ import {
 
 import { UserCompany } from "@/types";
 
-export function CompanySwitcher({ companies }: { companies: UserCompany[] }) {
+export function CompanySwitcher({
+  companies,
+  dashboardId,
+}: {
+  companies: UserCompany[];
+  dashboardId: string;
+}) {
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const [activeCompany, setActiveCompany] = React.useState(companies[0]);
+  const [activeCompany, setActiveCompany] = React.useState(
+    companies.find((company) => company.id === dashboardId) || companies[0],
+  );
 
   return (
     <SidebarMenu>

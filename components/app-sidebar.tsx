@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, Settings2, BarChart } from "lucide-react";
+import { Home, BarChart } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -34,17 +34,12 @@ export function AppSidebar({
       url: `/dashboard/${dashboardId}/financials`,
       icon: BarChart,
     },
-    {
-      title: "Admin",
-      url: `/dashboard/${dashboardId}/admin`,
-      icon: Settings2,
-    },
   ];
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <CompanySwitcher companies={companies} />
+        <CompanySwitcher companies={companies} dashboardId={dashboardId} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain links={links} />

@@ -27,17 +27,23 @@ export function Header() {
 
 function Breadcrumbs() {
   const pathname = usePathname();
-  const breadcrumbs = pathname.split("/").filter((path) => path !== "");
+  const pathParts = pathname.split("/").filter((path) => path !== "");
+  const dashboardId = pathParts[1];
+  const breadcrumbs = pathParts.filter((_, index) => index === 0 || index > 1);
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
         {breadcrumbs.map((breadcrumb, index) => {
+          const isDashboard = index === 0;
           const isLast = index === breadcrumbs.length - 1;
           const title = breadcrumb
             .replace(/-/g, " ")
             .replace(/\b\w/g, (l) => l.toUpperCase());
-          const href = `/${breadcrumbs.slice(0, index + 1).join("/")}`;
+          let href = `/${breadcrumbs.slice(0, index + 1).join("/")}`;
+          if (isDashboard) {
+            href += `/${dashboardId}`;
+          }
 
           return (
             <Fragment key={index}>

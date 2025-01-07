@@ -10,8 +10,8 @@ import {
   getHistoricalData,
   getIncomeStatements,
   fetchFullQuote,
-  fetchProfile,
 } from "@/server/actions/financials";
+import { fetchCompanyProfile } from "@/server/actions/companies";
 import { getDashboardByDashboardId } from "@/server/actions/dashboards";
 
 export default async function FinancialsPage({
@@ -33,8 +33,8 @@ export default async function FinancialsPage({
   }
 
   const [incomeStatements, profile, quote] = await Promise.all([
-    getIncomeStatements("7c4d0370-38ad-4b88-9e9d-3ef2c83fd9a1"),
-    fetchProfile(company.ticker),
+    getIncomeStatements(companyId),
+    fetchCompanyProfile(company.ticker),
     fetchFullQuote(company.ticker),
   ]);
 

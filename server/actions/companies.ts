@@ -29,3 +29,11 @@ export const deleteCompany = async (id: string) => {
     return { error: true, message: "Failed to delete company" };
   }
 };
+
+export async function fetchCompanyProfile(symbol: string) {
+  const url = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  return data[0];
+}

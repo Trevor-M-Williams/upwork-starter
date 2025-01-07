@@ -36,7 +36,9 @@ export const dashboards = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: text("user_id").notNull(),
-    companyId: uuid("company_id").references(() => companies.id),
+    companyId: uuid("company_id")
+      .references(() => companies.id)
+      .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => {

@@ -1,19 +1,19 @@
 "use server";
 
 import { db } from "@/server/db";
-import { userCompanies } from "@/server/db/schema";
+import { dashboards as dashboardsSchema } from "@/server/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getUser } from "@/server/server-only/auth";
-import { UserCompany } from "@/types";
+import { Dashboard } from "@/types";
 
-export const getUserCompanies = async () => {
+export const getDashboards = async () => {
   const user = await getUser();
   if (!user) {
     return [];
   }
 
-  const data = await db.query.userCompanies.findMany({
-    where: eq(userCompanies.userId, user.id),
+  const data = await db.query.dashboards.findMany({
+    where: eq(dashboardsSchema.userId, user.id),
     columns: {
       id: true,
       createdAt: true,
@@ -29,7 +29,7 @@ export const getUserCompanies = async () => {
     },
   });
 
-  const companies = data
+  const dashboards = data
     .map(({ company, createdAt, id }) =>
       company
         ? {
@@ -41,41 +41,41 @@ export const getUserCompanies = async () => {
           }
         : null,
     )
-    .filter((company): company is UserCompany => company !== null);
+    .filter((dashboard): dashboard is Dashboard => dashboard !== null);
 
-  return companies;
+  return dashboards;
 };
 
-export const getUserCompanyByDashboardId = async (dashboardId: string) => {
+export const getDashboardByDashboardId = async (dashboardId: string) => {
   const user = await getUser();
   if (!user) {
     return null;
   }
 
-  return await db.query.userCompanies.findFirst({
+  return await db.query.dashboards.findFirst({
     where: and(
-      eq(userCompanies.userId, user.id),
-      eq(userCompanies.id, dashboardId),
+      eq(dashboardsSchema.userId, user.id),
+      eq(dashboardsSchema.id, dashboardId),
     ),
   });
 };
 
-export const createUserCompany = async (companyId: string) => {
+export const createDashboard = async (companyId: string) => {
   try {
     const user = await getUser();
     if (!user) {
       return { error: true, message: "User not found" };
     }
 
-    await db.insert(userCompanies).values({ userId: user.id, companyId });
-    return { error: false, message: "Company created" };
+    await db.insert(dashboardsSchema).values({ userId: user.id, companyId });
+    return { error: false, message: "Dashboard created" };
   } catch (error) {
     console.error(error);
-    return { error: true, message: "Failed to create company" };
+    return { error: true, message: "Failed to create dashboard" };
   }
 };
 
-export const deleteUserCompany = async (companyId: string) => {
+export const deleteDashboard = async (dashboardId: string) => {
   try {
     const user = await getUser();
     if (!user) {
@@ -83,16 +83,16 @@ export const deleteUserCompany = async (companyId: string) => {
     }
 
     await db
-      .delete(userCompanies)
+      .delete(dashboardsSchema)
       .where(
         and(
-          eq(userCompanies.userId, user.id),
-          eq(userCompanies.companyId, companyId),
+          eq(dashboardsSchema.userId, user.id),
+          eq(dashboardsSchema.id, dashboardId),
         ),
       );
-    return { error: false, message: "Company deleted" };
+    return { error: false, message: "Dashboard deleted" };
   } catch (error) {
     console.error(error);
-    return { error: true, message: "Failed to delete company" };
+    return { error: true, message: "Failed to delete dashboard" };
   }
 };

@@ -6,7 +6,7 @@ import { Home, BarChart } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { CompanySwitcher } from "@/components/company-switcher";
+import { DashboardSwitcher } from "@/components/dashboard-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -14,12 +14,12 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { UserCompany } from "@/types";
+import { Dashboard } from "@/types";
 
 export function AppSidebar({
-  companies,
+  dashboards,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { companies: UserCompany[] }) {
+}: React.ComponentProps<typeof Sidebar> & { dashboards: Dashboard[] }) {
   const pathname = usePathname();
   const dashboardId = pathname.split("/")[2];
 
@@ -39,7 +39,7 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <CompanySwitcher companies={companies} dashboardId={dashboardId} />
+        <DashboardSwitcher dashboards={dashboards} dashboardId={dashboardId} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain links={links} />

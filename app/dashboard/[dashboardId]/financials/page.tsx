@@ -12,15 +12,15 @@ import {
   fetchFullQuote,
   fetchProfile,
 } from "@/server/actions/financials";
-import { getUserCompanyByDashboardId } from "@/server/actions/user-companies";
+import { getDashboardByDashboardId } from "@/server/actions/dashboards";
 
 export default async function FinancialsPage({
   params,
 }: {
   params: { dashboardId: string };
 }) {
-  const userCompany = await getUserCompanyByDashboardId(params.dashboardId);
-  const companyId = userCompany?.companyId;
+  const dashboard = await getDashboardByDashboardId(params.dashboardId);
+  const companyId = dashboard?.companyId;
 
   if (!companyId) {
     return <div>Company not found</div>;

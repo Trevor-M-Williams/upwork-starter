@@ -31,8 +31,8 @@ export const companies = pgTable("companies", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const userCompanies = pgTable(
-  "user_companies",
+export const dashboards = pgTable(
+  "dashboards",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: text("user_id").notNull(),
@@ -41,7 +41,7 @@ export const userCompanies = pgTable(
   },
   (table) => {
     return {
-      userCompanyIdx: uniqueIndex("user_company_idx").on(
+      dashboardIdx: uniqueIndex("dashboard_idx").on(
         table.userId,
         table.companyId,
       ),
@@ -96,13 +96,13 @@ export const cashFlowStatements = pgTable("cash_flow_statements", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const userCompaniesRelations = relations(userCompanies, ({ one }) => ({
+export const dashboardsRelations = relations(dashboards, ({ one }) => ({
   company: one(companies, {
-    fields: [userCompanies.companyId],
+    fields: [dashboards.companyId],
     references: [companies.id],
   }),
 }));
 
 export const companiesRelations = relations(companies, ({ many }) => ({
-  userCompanies: many(userCompanies),
+  dashboards: many(dashboards),
 }));

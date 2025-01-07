@@ -20,19 +20,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { UserCompany } from "@/types";
+import { Dashboard } from "@/types";
 
-export function CompanySwitcher({
-  companies,
+export function DashboardSwitcher({
+  dashboards,
   dashboardId,
 }: {
-  companies: UserCompany[];
+  dashboards: Dashboard[];
   dashboardId: string;
 }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const [activeCompany, setActiveCompany] = React.useState(
-    companies.find((company) => company.id === dashboardId) || companies[0],
+  const [activeDashboard, setActiveDashboard] = React.useState(
+    dashboards.find((dashboard) => dashboard.id === dashboardId) ||
+      dashboards[0],
   );
 
   return (
@@ -45,11 +46,11 @@ export function CompanySwitcher({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                {activeCompany.ticker.slice(0, 1)}
+                {activeDashboard.ticker.slice(0, 1)}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {activeCompany.name}
+                  {activeDashboard.name}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -64,19 +65,19 @@ export function CompanySwitcher({
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Companies
             </DropdownMenuLabel>
-            {companies.map((company, index) => (
+            {dashboards.map((dashboard, index) => (
               <DropdownMenuItem
-                key={company.id}
+                key={dashboard.id}
                 onClick={() => {
-                  setActiveCompany(company);
-                  router.push(`/dashboard/${company.id}`);
+                  setActiveDashboard(dashboard);
+                  router.push(`/dashboard/${dashboard.id}`);
                 }}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
-                  {company.ticker.slice(0, 1)}
+                  {dashboard.ticker.slice(0, 1)}
                 </div>
-                {company.name}
+                {dashboard.name}
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}

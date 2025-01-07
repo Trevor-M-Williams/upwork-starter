@@ -5,7 +5,7 @@ export type Company = {
   createdAt: Date;
 };
 
-export type UserCompany = {
+export type Dashboard = {
   id: string;
   companyId: string;
   name: string;

@@ -10,6 +10,7 @@ import {
   fetchIncomeStatements,
 } from "../actions/financials";
 import { eq } from "drizzle-orm";
+import { getOrCreateCompany } from "../actions/companies";
 
 if (!process.env.POSTGRES_URL) {
   throw new Error("POSTGRES_URL is not defined");
@@ -20,16 +21,18 @@ const sql = neon(process.env.POSTGRES_URL!);
 const db = drizzle(sql, { schema });
 
 async function seed() {
-  const companyName = "Apple Inc.";
   const companyTicker = "AAPL";
 
   console.log("seeding the database");
   try {
-    await seedFinancialStatements(companyName, companyTicker);
-    console.log("successfully seeded financial statements");
+    await seedSp500Historical();
+    console.log("successfully seeded sp500 historical data");
 
-    await seedStockData(companyName, companyTicker);
-    console.log("successfully seeded stock data");
+    // await seedFinancialStatements(companyTicker);
+    // console.log("successfully seeded financial statements");
+
+    // await seedStockData(companyTicker);
+    // console.log("successfully seeded stock data");
   } catch (error) {
     console.error("Error seeding database:", error);
     process.exit(1);
@@ -39,30 +42,24 @@ async function seed() {
 
 seed();
 
-async function getOrCreateCompany(companyName: string, companyTicker: string) {
-  let [company] = await db
-    .select()
-    .from(schema.companies)
-    .where(eq(schema.companies.ticker, companyTicker))
-    .limit(1);
+async function seedSp500Historical() {
+  const historicalData = await fetchHistoricalData("SPY", "2000-01-01");
 
-  if (!company) {
-    [company] = await db
-      .insert(schema.companies)
-      .values([
-        {
-          name: companyName,
-          ticker: companyTicker,
-        },
-      ])
-      .returning();
+  if (!historicalData) {
+    throw new Error("Failed to fetch historical data");
   }
 
-  return company;
+  await db.delete(schema.sp500Historical);
+
+  await db.insert(schema.sp500Historical).values(historicalData);
 }
 
-async function seedStockData(companyName: string, companyTicker: string) {
-  const company = await getOrCreateCompany(companyName, companyTicker);
+async function seedStockData(companyTicker: string) {
+  const company = await getOrCreateCompany(companyTicker);
+
+  if (!company) {
+    throw new Error("Company not found");
+  }
 
   const historicalData = await fetchHistoricalData(companyTicker, "2024-01-01");
 
@@ -83,11 +80,12 @@ async function seedStockData(companyName: string, companyTicker: string) {
   );
 }
 
-async function seedFinancialStatements(
-  companyName: string,
-  companyTicker: string,
-) {
-  const company = await getOrCreateCompany(companyName, companyTicker);
+async function seedFinancialStatements(companyTicker: string) {
+  const company = await getOrCreateCompany(companyTicker);
+
+  if (!company) {
+    throw new Error("Company not found");
+  }
 
   // delete existing statements
   await db

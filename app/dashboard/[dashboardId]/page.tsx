@@ -1,8 +1,9 @@
 import { H1 } from "@/components/typography";
-import { fetchCompanyProfile, getCompany } from "@/server/actions/companies";
+import { getCompanyById } from "@/server/actions/companies";
+import { fetchCompanyProfile } from "@/server/actions/financials";
 import { getDashboardByDashboardId } from "@/server/actions/dashboards";
 
-export default async function DashboardPage({
+export default async function CompanyPage({
   params,
 }: {
   params: { dashboardId: string };
@@ -12,7 +13,7 @@ export default async function DashboardPage({
     return <div>Dashboard not found</div>;
   }
 
-  const company = await getCompany(dashboard.companyId);
+  const company = await getCompanyById(dashboard.companyId);
   if (!company) {
     return <div>Company not found</div>;
   }

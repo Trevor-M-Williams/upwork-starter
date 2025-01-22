@@ -1,15 +1,30 @@
 "use server";
 
-import { asc, eq, sql } from "drizzle-orm";
-import { StockAPIData } from "@/types";
+import { asc, eq, gte, sql } from "drizzle-orm";
+import {
+  BalanceSheetData,
+  CashFlowStatementData,
+  IncomeStatementData,
+  StockAPIData,
+} from "@/types";
 import { db } from "@/server/db";
 import {
   historicalPrices,
   companies,
-  balanceSheets,
-  incomeStatements,
-  cashFlowStatements,
+  balanceSheets as balanceSheetsTable,
+  incomeStatements as incomeStatementsTable,
+  cashFlowStatements as cashFlowStatementsTable,
+  sp500Historical,
 } from "@/server/db/schema";
+import { getOrCreateCompany } from "@/server/actions/companies";
+
+export async function getSp500HistoricalData(startDate: string) {
+  const historicalData = await db.query.sp500Historical.findMany({
+    where: gte(sp500Historical.date, startDate),
+    orderBy: asc(sp500Historical.date),
+  });
+  return historicalData;
+}
 
 export async function getHistoricalData(
   ticker: string,
@@ -29,20 +44,16 @@ export async function getHistoricalData(
     const prices = await db
       .select()
       .from(historicalPrices)
-      .where(eq(historicalPrices.companyId, company.id))
+      .where(
+        sql`${historicalPrices.companyId} = ${company.id} 
+        AND ${historicalPrices.date} >= ${new Date(startDate)}
+        AND ${historicalPrices.date} <= ${new Date(endDate)}`,
+      )
       .orderBy(asc(historicalPrices.date));
 
     // Check if we have any data and if the latest price is fresh
     if (prices.length > 0 && !calculateIsStale(prices[0].updatedAt, 1)) {
-      // Filter dates in memory
-      const filteredPrices = prices.filter((p) => {
-        const priceDate = new Date(p.date);
-        return (
-          priceDate >= new Date(startDate) && priceDate <= new Date(endDate)
-        );
-      });
-
-      return filteredPrices.map((p) => ({
+      return prices.map((p) => ({
         date: new Date(p.date).toISOString().split("T")[0],
         price: Number(p.price),
       }));
@@ -60,14 +71,14 @@ export async function getHistoricalData(
       .values(
         historicalData.map((data: { date: string; price: number }) => ({
           companyId: company.id,
+          ticker: company.ticker,
           date: new Date(data.date),
           price: data.price,
           updatedAt: new Date(),
         })),
       )
-      .onConflictDoUpdate({
+      .onConflictDoNothing({
         target: [historicalPrices.companyId, historicalPrices.date],
-        set: { price: sql`EXCLUDED.price`, updatedAt: sql`NOW()` },
       });
 
     return historicalData;
@@ -77,80 +88,165 @@ export async function getHistoricalData(
   }
 }
 
-export async function getBalanceSheets(ticker: string) {
-  const balanceSheetData = await db.query.balanceSheets.findMany({
-    where: eq(balanceSheets.companyId, ticker),
-    orderBy: asc(balanceSheets.date),
+export async function getBalanceSheets(symbol: string) {
+  const company = await getOrCreateCompany(symbol);
+
+  if (!company) {
+    throw new Error("Failed to get/create company");
+  }
+
+  let balanceSheets = await db.query.balanceSheets.findMany({
+    where: eq(balanceSheetsTable.companyId, company.id),
+    orderBy: asc(balanceSheetsTable.date),
   });
 
-  const latestBalanceSheet = balanceSheetData[0];
+  const latestBalanceSheet = balanceSheets[0];
 
   if (
-    !balanceSheetData.length ||
+    !balanceSheets.length ||
     !latestBalanceSheet ||
     calculateIsStale(latestBalanceSheet.updatedAt, 1)
   ) {
-    const balanceSheetData = await fetchBalanceSheets(ticker);
-    await db.insert(balanceSheets).values(balanceSheetData);
+    const fetchedData = await fetchBalanceSheets(company.ticker);
+    if (!fetchedData || fetchedData.length === 0) {
+      return [];
+    }
+
+    // Transform the data before insertion
+    balanceSheets = fetchedData.map((statement: BalanceSheetData) => ({
+      companyId: company.id,
+      period: statement.period,
+      date: statement.date,
+      data: statement,
+      updatedAt: new Date(),
+    }));
+
+    if (balanceSheets.length > 0) {
+      await db
+        .insert(balanceSheetsTable)
+        .values(balanceSheets)
+        .onConflictDoNothing({
+          target: [balanceSheetsTable.companyId, balanceSheetsTable.date],
+        });
+    }
   }
 
-  return balanceSheetData;
+  // Sort by date in ascending order (oldest first)
+  return balanceSheets.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
 }
 
-export async function getIncomeStatements(companyId: string) {
-  const company = await db.query.companies.findFirst({
-    where: eq(companies.id, companyId),
-  });
+export async function getIncomeStatements(symbol: string) {
+  const company = await getOrCreateCompany(symbol);
 
   if (!company) {
-    throw new Error("Company not found");
+    throw new Error("Failed to get/create company");
   }
 
-  const incomeStatementData = await db.query.incomeStatements.findMany({
-    where: eq(incomeStatements.companyId, companyId),
-    orderBy: asc(incomeStatements.date),
+  let incomeStatements = await db.query.incomeStatements.findMany({
+    where: eq(incomeStatementsTable.companyId, company.id),
+    orderBy: asc(incomeStatementsTable.date),
   });
 
-  const latestIncomeStatement = incomeStatementData[0];
+  const latestIncomeStatement = incomeStatements[0];
 
   if (
-    !incomeStatementData.length ||
+    !incomeStatements.length ||
     !latestIncomeStatement ||
     calculateIsStale(latestIncomeStatement.updatedAt, 1)
   ) {
-    const incomeStatementData = await fetchIncomeStatements(company.ticker);
-    await db.insert(incomeStatements).values(incomeStatementData);
+    const fetchedData = await fetchIncomeStatements(company.ticker);
+    if (!fetchedData || fetchedData.length === 0) {
+      return [];
+    }
+
+    // Transform the data before insertion
+    incomeStatements = fetchedData
+      .map((statement: IncomeStatementData) => {
+        // found some bad data so we're calculating the operating income ratio manually
+        const operatingIncomeRatio =
+          statement.operatingIncome / statement.revenue;
+
+        statement.operatingIncomeRatio = operatingIncomeRatio;
+        return {
+          companyId: company.id,
+          period: statement.period,
+          date: statement.date,
+          data: statement,
+          updatedAt: new Date(),
+        };
+      })
+      .filter((statement: IncomeStatementData) => statement != null);
+
+    if (incomeStatements.length > 0) {
+      await db
+        .insert(incomeStatementsTable)
+        .values(incomeStatements)
+        .onConflictDoNothing({
+          target: [incomeStatementsTable.companyId, incomeStatementsTable.date],
+        });
+    }
   }
 
-  return incomeStatementData;
+  // Sort by date in ascending order (oldest first)
+  return incomeStatements.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
 }
 
-export async function getCashFlowStatements(companyId: string) {
-  const company = await db.query.companies.findFirst({
-    where: eq(companies.id, companyId),
-  });
+export async function getCashFlowStatements(symbol: string) {
+  const company = await getOrCreateCompany(symbol);
 
   if (!company) {
-    throw new Error("Company not found");
+    throw new Error("Failed to get/create company");
   }
 
-  const cashFlowStatementData = await db.query.cashFlowStatements.findMany({
-    where: eq(cashFlowStatements.companyId, companyId),
-    orderBy: asc(cashFlowStatements.date),
+  let cashFlowStatements = await db.query.cashFlowStatements.findMany({
+    where: eq(cashFlowStatementsTable.companyId, company.id),
+    orderBy: asc(cashFlowStatementsTable.date),
   });
 
-  const latestCashFlowStatement = cashFlowStatementData[0];
+  const latestCashFlowStatement = cashFlowStatements[0];
 
   if (
-    !cashFlowStatementData.length ||
+    !cashFlowStatements.length ||
     !latestCashFlowStatement ||
     calculateIsStale(latestCashFlowStatement.updatedAt, 1)
   ) {
-    const cashFlowStatementData = await fetchCashFlowStatements(company.ticker);
-    await db.insert(cashFlowStatements).values(cashFlowStatementData);
+    const fetchedData = await fetchCashFlowStatements(company.ticker);
+    if (!fetchedData || fetchedData.length === 0) {
+      return [];
+    }
+
+    // Transform the data before insertion
+    cashFlowStatements = fetchedData.map(
+      (statement: CashFlowStatementData) => ({
+        companyId: company.id,
+        period: statement.period,
+        date: statement.date,
+        data: statement,
+        updatedAt: new Date(),
+      }),
+    );
+
+    if (cashFlowStatements.length > 0) {
+      await db
+        .insert(cashFlowStatementsTable)
+        .values(cashFlowStatements)
+        .onConflictDoNothing({
+          target: [
+            cashFlowStatementsTable.companyId,
+            cashFlowStatementsTable.date,
+          ],
+        });
+    }
   }
 
-  return cashFlowStatementData;
+  // Sort by date in ascending order (oldest first)
+  return cashFlowStatements.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
 }
 
 // ------------- Data fetching ------------- //
@@ -171,7 +267,7 @@ export async function fetchHistoricalData(
     const data = await response.json();
     const stockData = data.historical
       .map((item: StockAPIData) => ({
-        date: formatDate(item.date),
+        date: item.date,
         price: item.close,
       }))
       .reverse();
@@ -204,23 +300,79 @@ export async function fetchIncomeStatements(symbol: string) {
   return data;
 }
 
-export async function fetchStockPeers(symbol: string) {
-  const url = `https://financialmodelingprep.com/api/v4/stock_peers?symbol=${symbol}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  return data;
+export async function fetchCompanyPeers(symbol: string) {
+  try {
+    const url = `https://financialmodelingprep.com/api/v4/stock_peers?symbol=${symbol}&apikey=${process.env.STOCK_API_KEY}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data?.[0]?.peersList) {
+      throw new Error("Invalid peers data format");
+    }
+
+    return data[0].peersList;
+  } catch (error) {
+    console.error(`Failed to fetch peers for ${symbol}:`, error);
+    return [];
+  }
+}
+
+export async function fetchCompanyProfile(symbol: string) {
+  try {
+    const url = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data?.[0]) {
+      throw new Error(`No profile data found for ${symbol}`);
+    }
+
+    return data[0];
+  } catch (error) {
+    console.error(`Failed to fetch profile for ${symbol}:`, error);
+    throw error; // Re-throw because this is required data for company creation
+  }
 }
 
 export async function fetchFullQuote(symbol: string) {
   const url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
   const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
   const data = await response.json();
+  return data[0];
+}
+
+export async function fetchCompanyMetrics(symbol: string) {
+  const url = `https://financialmodelingprep.com/api/v3/key-metrics-ttm/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data?.[0]) {
+    throw new Error(`No profile data found for ${symbol}`);
+  }
+
   return data[0];
 }
 
 // ------------- Helper functions ------------- //
 
-function calculateIsStale(updatedAt: Date, stalePeriodInDays: number): boolean {
+function calculateIsStale(updatedAt: Date, stalePeriodInDays: number) {
   const updatedAtDate = new Date(updatedAt);
   const currentDate = new Date();
 
@@ -231,8 +383,17 @@ function calculateIsStale(updatedAt: Date, stalePeriodInDays: number): boolean {
   return updatedAtDate < stalePeriodDate;
 }
 
-function formatDate(dateStr: string): string {
-  const dateObj = new Date(dateStr);
-  const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear().toString().slice(2)}`;
-  return formattedDate;
+export async function getStockPrice(ticker: string) {
+  //testing tool use in api/chat/route.ts
+  try {
+    const quote = await fetchFullQuote(ticker);
+    if (!quote) {
+      throw new Error(`No quote data found for ${ticker}`);
+    }
+
+    return quote.price;
+  } catch (error) {
+    console.error(`Error fetching stock price for ${ticker}:`, error);
+    throw new Error(`Failed to fetch stock price for ${ticker}`);
+  }
 }

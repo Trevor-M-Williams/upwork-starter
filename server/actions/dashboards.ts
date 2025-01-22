@@ -5,6 +5,7 @@ import { dashboards as dashboardsSchema } from "@/server/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getUser } from "@/server/server-only/auth";
 import { Dashboard } from "@/types";
+import { createCompany } from "./companies";
 
 export const getDashboards = async () => {
   const user = await getUser();
@@ -16,28 +17,24 @@ export const getDashboards = async () => {
     where: eq(dashboardsSchema.userId, user.id),
     columns: {
       id: true,
+      userId: true,
+      companyId: true,
       createdAt: true,
     },
     with: {
-      company: {
-        columns: {
-          id: true,
-          name: true,
-          ticker: true,
-        },
-      },
+      company: true,
     },
   });
 
   const dashboards = data
-    .map(({ company, createdAt, id }) =>
-      company
+    .map((dashboard) =>
+      dashboard.company
         ? {
-            id,
-            companyId: company.id,
-            name: company.name,
-            ticker: company.ticker,
-            createdAt,
+            id: dashboard.id,
+            userId: dashboard.userId,
+            companyId: dashboard.companyId,
+            company: dashboard.company,
+            createdAt: dashboard.createdAt,
           }
         : null,
     )
@@ -52,6 +49,8 @@ export const getDashboardByDashboardId = async (dashboardId: string) => {
     return null;
   }
 
+  console.log("dashboardId", dashboardId);
+
   return await db.query.dashboards.findFirst({
     where: and(
       eq(dashboardsSchema.userId, user.id),
@@ -60,15 +59,22 @@ export const getDashboardByDashboardId = async (dashboardId: string) => {
   });
 };
 
-export const createDashboard = async (companyId: string) => {
+export const createDashboard = async (ticker: string) => {
   try {
     const user = await getUser();
     if (!user) {
       return { error: true, message: "User not found" };
     }
+    const { id: companyId, error, message } = await createCompany(ticker);
+    if (error || !companyId) {
+      return { error: true, message };
+    }
 
-    await db.insert(dashboardsSchema).values({ userId: user.id, companyId });
-    return { error: false, message: "Dashboard created" };
+    const [inserted] = await db
+      .insert(dashboardsSchema)
+      .values({ userId: user.id, companyId })
+      .returning({ id: dashboardsSchema.id });
+    return { error: false, message: "Dashboard created", id: inserted.id };
   } catch (error) {
     console.error(error);
     return { error: true, message: "Failed to create dashboard" };

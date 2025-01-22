@@ -1,22 +1,65 @@
 "use server";
 
 import { db } from "@/server/db";
-import { companies } from "@/server/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { companies, dashboards } from "@/server/db/schema";
+import { eq } from "drizzle-orm";
+import {
+  fetchCompanyPeers,
+  fetchCompanyProfile,
+} from "@/server/actions/financials";
 
-export const getCompany = async (id: string) => {
+export const getCompanyById = async (id: string) => {
   return await db.query.companies.findFirst({
     where: eq(companies.id, id),
   });
 };
 
-export const createCompany = async (name: string, ticker: string) => {
+export const getCompanyByDashboardId = async (dashboardId: string) => {
+  return await db.query.dashboards.findFirst({
+    where: eq(dashboards.id, dashboardId),
+    with: {
+      company: true,
+    },
+  });
+};
+
+export const createCompany = async (ticker: string) => {
   try {
-    await db.insert(companies).values({ name, ticker });
-    return { error: false, message: "Company created" };
+    // First try to fetch the external data
+    let companyProfile, companyPeers;
+    try {
+      [companyProfile, companyPeers] = await Promise.all([
+        fetchCompanyProfile(ticker),
+        fetchCompanyPeers(ticker),
+      ]);
+    } catch (error) {
+      console.error("Failed to fetch company data:", error);
+      return { error: true, message: "Failed to fetch company data" };
+    }
+
+    // Then try to insert into database
+    try {
+      const [inserted] = await db
+        .insert(companies)
+        .values({
+          name: companyProfile.companyName,
+          ticker,
+          industry: companyProfile.industry,
+          sector: companyProfile.sector,
+          profile: companyProfile,
+          peers: companyPeers,
+        })
+        .returning({ id: companies.id });
+
+      return { error: false, message: "Company created", id: inserted.id };
+    } catch (error) {
+      console.error("Failed to insert company:", error);
+      return { error: true, message: "Failed to save company to database" };
+    }
   } catch (error) {
-    console.error(error);
-    return { error: true, message: "Failed to create company" };
+    // Catch any other unexpected errors
+    console.error("Unexpected error:", error);
+    return { error: true, message: "An unexpected error occurred" };
   }
 };
 
@@ -30,10 +73,12 @@ export const deleteCompany = async (id: string) => {
   }
 };
 
-export async function fetchCompanyProfile(symbol: string) {
-  const url = `https://financialmodelingprep.com/api/v3/profile/${symbol}?apikey=${process.env.STOCK_API_KEY}`;
-  const response = await fetch(url);
-  const data = await response.json();
-
-  return data[0];
-}
+export const getOrCreateCompany = async (symbol: string) => {
+  const company = await db.query.companies.findFirst({
+    where: eq(companies.ticker, symbol.toUpperCase()),
+  });
+  if (!company) {
+    await createCompany(symbol.toUpperCase());
+  }
+  return company;
+};

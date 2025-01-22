@@ -35,8 +35,13 @@ export function DashboardSwitcher({
 
   const [activeDashboard, setActiveDashboard] = React.useState(
     dashboards.find((dashboard) => dashboard.id === dashboardId) ||
-      dashboards[0],
+      dashboards[0] ||
+      null,
   );
+
+  if (!activeDashboard) {
+    return null;
+  }
 
   return (
     <>
@@ -49,11 +54,11 @@ export function DashboardSwitcher({
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  {activeDashboard.ticker.slice(0, 1)}
+                  {activeDashboard.company.ticker.slice(0, 1)}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {activeDashboard.name}
+                    {activeDashboard.company.name}
                   </span>
                 </div>
                 <ChevronsUpDown className="ml-auto" />
@@ -78,9 +83,9 @@ export function DashboardSwitcher({
                   className="gap-2 p-2"
                 >
                   <div className="flex size-6 items-center justify-center rounded-sm border">
-                    {dashboard.ticker.slice(0, 1)}
+                    {dashboard.company.ticker.slice(0, 1)}
                   </div>
-                  {dashboard.name}
+                  {dashboard.company.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
               ))}

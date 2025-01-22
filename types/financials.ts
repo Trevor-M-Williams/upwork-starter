@@ -1,9 +1,9 @@
 export type FinancialStatement =
-  | BalanceSheet
-  | CashFlowStatement
-  | IncomeStatement;
+  | BalanceSheetData
+  | CashFlowStatementData
+  | IncomeStatementData;
 
-export type BalanceSheet = {
+export type BalanceSheetData = {
   date: string;
   symbol: string;
   reportedCurrency: string;
@@ -60,7 +60,7 @@ export type BalanceSheet = {
   finalLink: string;
 };
 
-export type CashFlowStatement = {
+export type CashFlowStatementData = {
   date: string;
   symbol: string;
   reportedCurrency: string;
@@ -103,7 +103,7 @@ export type CashFlowStatement = {
   finalLink: string;
 };
 
-export type IncomeStatement = {
+export type IncomeStatementData = {
   date: string;
   symbol: string;
   reportedCurrency: string;
@@ -163,3 +163,42 @@ export type StockAPIData = {
 export type FinancialStatementType = "balance_sheet" | "cash_flow" | "income";
 
 export type FinancialStatementPeriod = "annual" | "quarterly";
+
+export type CompanyProfile = {
+  symbol: string;
+  price: number;
+  beta: number;
+  volAvg: number;
+  mktCap: number;
+  lastDiv: number;
+  range: string;
+  changes: number;
+  companyName: string;
+  currency: string;
+  cik: string;
+  isin: string;
+  cusip: string;
+  exchange: string;
+  exchangeShortName: string;
+  industry: string;
+  website: string;
+  description: string;
+  ceo: string;
+  sector: string;
+  country: string;
+  fullTimeEmployees: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  dcfDiff: number;
+  dcf: number;
+  image: string;
+  ipoDate: string;
+  defaultImage: boolean;
+  isEtf: boolean;
+  isActivelyTrading: boolean;
+  isAdr: boolean;
+  isFund: boolean;
+};

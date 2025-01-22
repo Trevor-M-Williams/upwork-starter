@@ -14,10 +14,25 @@ export const convertPricesToPercentChange = (prices: number[]) => {
 };
 
 export function formatValue(value: number) {
+  const absValue = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+
   if (value === 0) return "0";
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value <= 10) return value.toFixed(2);
-  if (value <= 100) return value.toFixed(1);
-  return value.toFixed(0);
+  if (absValue >= 10_000_000_000)
+    return `${sign}${(absValue / 1_000_000_000).toFixed(0)}B`;
+  if (absValue >= 1_000_000_000)
+    return `${sign}${(absValue / 1_000_000_000).toFixed(1)}B`;
+  if (absValue >= 10_000_000)
+    return `${sign}${(absValue / 1_000_000).toFixed(0)}M`;
+  if (absValue >= 1_000_000)
+    return `${sign}${(absValue / 1_000_000).toFixed(1)}M`;
+  if (absValue <= 10) return `${sign}${absValue.toFixed(2)}`;
+  if (absValue <= 100) return `${sign}${absValue.toFixed(1)}`;
+  return `${sign}${absValue.toFixed(0)}`;
+}
+
+export function convertCamelCaseToTitleCase(str: string) {
+  return str.replace(/([A-Z])/g, " $1").replace(/^./, function (str) {
+    return str.toUpperCase();
+  });
 }

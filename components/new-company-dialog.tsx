@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Popover,
   PopoverContent,
@@ -15,19 +16,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogHeader,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { createCompany } from "@/server/actions/companies";
+import { createDashboard } from "@/server/actions/dashboards";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNewCompanyDialog } from "@/hooks/use-new-company-dialog";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 
 const stocks = [
   {
@@ -57,22 +56,18 @@ const stocks = [
 ];
 
 export function NewCompanyDialog() {
+  const router = useRouter();
   const { isOpen, close } = useNewCompanyDialog();
   const [popoverOpen, setPopoverOpen] = React.useState(false);
-  const [company, setCompany] = React.useState({
-    name: "",
-    ticker: "",
-  });
+  const [ticker, setTicker] = React.useState("");
 
-  const handleAnalyze = async () => {
-    console.log(company);
-    // const { error, message } = await createCompany(
-    //   company.name,
-    //   company.ticker,
-    // );
-    // if (error) {
-    //   toast.error(message);
-    // }
+  const handleAddCompany = async () => {
+    const { id, error, message } = await createDashboard(ticker);
+    if (error) {
+      toast.error(message);
+    } else {
+      router.push(`/dashboard/${id}`);
+    }
     close();
   };
 
@@ -92,9 +87,8 @@ export function NewCompanyDialog() {
                   aria-expanded={popoverOpen}
                   className="w-96 justify-between"
                 >
-                  {company.name
-                    ? stocks.find((stock) => stock.value === company.ticker)
-                        ?.label
+                  {ticker
+                    ? stocks.find((stock) => stock.value === ticker)?.label
                     : "Select a stock..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -110,17 +104,14 @@ export function NewCompanyDialog() {
                           key={stock.value}
                           value={stock.value}
                           onSelect={() => {
-                            setCompany({
-                              name: stock.label,
-                              ticker: stock.value,
-                            });
+                            setTicker(stock.value);
                             setPopoverOpen(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              company.ticker === stock.value
+                              ticker === stock.value
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
@@ -134,8 +125,8 @@ export function NewCompanyDialog() {
               </PopoverContent>
             </Popover>
 
-            <Button disabled={!company.name} onClick={handleAnalyze}>
-              Analyze
+            <Button disabled={!ticker} onClick={handleAddCompany}>
+              Add Company
             </Button>
           </div>
         </div>

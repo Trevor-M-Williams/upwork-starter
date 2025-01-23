@@ -1,6 +1,4 @@
-# Project Specification
-
-## Supply Chain Analysis Tool
+# Supply Chain Analysis Tool
 
 ### Overview
 

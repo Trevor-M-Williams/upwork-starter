@@ -22,4 +22,4 @@ You should spend no more than 5 hours on this project. If the deliverable is com
 
 ### Design
 
-- Feel free to use this [Figma file](https://www.figma.com/proto/Zxm0uIrBUzQ8p8iMKFNUOH/Augii-Official?node-id=8342-16199&t=USSgYJ3HyPS1e6j2-0&scaling=min-zoom&content-scaling=fixed&page-id=7211:118&starting-point-node-id=8236:51138) as a reference.
+- Feel free to use this [Figma file](https://www.figma.com/proto/Zxm0uIrBUzQ8p8iMKFNUOH/Augii-Official?node-id=8342-16199&t=USSgYJ3HyPS1e6j2-0&scaling=min-zoom&content-scaling=fixed&page-id=7211:118&starting-point-node-id=8236:51138) as a reference. The tables are not required.

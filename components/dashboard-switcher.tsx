@@ -1,11 +1,4 @@
-"use client";
-
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useNewCompanyDialog } from "@/hooks/use-new-company-dialog";
-import { Dashboard } from "@/types";
 import { ChevronsUpDown, Plus } from "lucide-react";
-import { NewCompanyDialog } from "@/components/new-company-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,22 +15,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-export function DashboardSwitcher({
-  dashboards,
-  dashboardId,
-}: {
-  dashboards: Dashboard[];
-  dashboardId: string;
-}) {
-  const router = useRouter();
+export function DashboardSwitcher() {
   const { isMobile } = useSidebar();
-  const { open } = useNewCompanyDialog();
 
-  const [activeDashboard, setActiveDashboard] = React.useState(
-    dashboards.find((dashboard) => dashboard.id === dashboardId) ||
-      dashboards[0] ||
-      null,
-  );
+  const dashboards = [
+    {
+      id: "1",
+      name: "Apple Inc.",
+      ticker: "AAPL",
+    },
+  ];
+
+  const activeDashboard = dashboards[0];
 
   if (!activeDashboard) {
     return null;
@@ -54,11 +43,11 @@ export function DashboardSwitcher({
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  {activeDashboard.company.ticker.slice(0, 1)}
+                  {activeDashboard.ticker.slice(0, 1)}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {activeDashboard.company.name}
+                    {activeDashboard.name}
                   </span>
                 </div>
                 <ChevronsUpDown className="ml-auto" />
@@ -74,24 +63,17 @@ export function DashboardSwitcher({
                 Companies
               </DropdownMenuLabel>
               {dashboards.map((dashboard, index) => (
-                <DropdownMenuItem
-                  key={dashboard.id}
-                  onClick={() => {
-                    setActiveDashboard(dashboard);
-                    router.push(`/dashboard/${dashboard.id}`);
-                  }}
-                  className="gap-2 p-2"
-                >
+                <DropdownMenuItem key={dashboard.id} className="gap-2 p-2">
                   <div className="flex size-6 items-center justify-center rounded-sm border">
-                    {dashboard.company.ticker.slice(0, 1)}
+                    {dashboard.ticker.slice(0, 1)}
                   </div>
-                  {dashboard.company.name}
+                  {dashboard.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={open} className="gap-2 p-2">
+              <DropdownMenuItem className="gap-2 p-2">
                 <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                   <Plus className="size-4" />
                 </div>
@@ -103,7 +85,6 @@ export function DashboardSwitcher({
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
-      <NewCompanyDialog />
     </>
   );
 }

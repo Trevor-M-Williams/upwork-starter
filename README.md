@@ -1,53 +1,27 @@
-# Next.js Application Template
+#Project Specification
 
-## Stack
+## Supply Chain Analysis Tool
 
-- 🔐 Clerk Auth
-- 📊 PostgreSQL + Drizzle ORM
-- 🧩 Shadcn/ui
+### Overview
 
-## Getting Started
+This feature is intended to help board directors stay informed about potential supply chain disruptions by using ai to analyze news articles and displaying relevant data points on a map.
 
-1. Clone the repository:
+The prototype should be designed using Apple as the company in question. Therefore, only supply chain disruptions that are relevant to Apple should be shown on the map.
 
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
+### Deliverable
 
-3. Set up environment variables:
-   Create a `.env` file in the root directory with the following variables:
-   ```env
-   POSTGRES_URL=your_postgres_connection_string
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-   CLERK_SECRET_KEY=your_clerk_secret_key
-   ```
+A link to the live project should be provided on completion. The map should be populated with data points on load. Clicking on a data point should bring up a tooltip with information about the incident and the business implications.
 
-   *Note: .env.local does not play nicely with drizzle*
+### Notes
 
-4. Initialize the database:
-   ```bash
-   pnpm db:push
-   ```
+You should spend no more than 5 hours on this project. If the deliverable is completed in less than 5 hours, you are encouraged to add any additional functionality that you deem appropriate with the remaining time. You are free to choose your own solution for storing data. You will need to sign up for a free news api account and get an api key (link below). The data should be refreshed at least once an hour.
 
-5. Run the development server:
-   ```bash
-   pnpm dev
-   ```
+### API Keys
 
-6. Run Drizzle Studio to view the database while developing
-   ```bash
-   pnpm db:studio
-   ```
+- [News Api](https://newsapi.org/)
+- OpenAI models - key will be provided
+- Google maps api - key will be provided
 
-## Database
+### Design
 
-This template uses Drizzle ORM with PostgreSQL. The schema is defined in server/db/schema.ts. Database operations are handled in the server/actions directory.
-
-## Authentication
-
-Authentication is handled by Clerk. Protected routes are configured in the middleware.ts file. The dashboard routes are protected by default and require authentication.
-
-## UI Components
-
-The project uses a combination of custom components and shadcn/ui. Components are styled using Tailwind CSS with a customized theme configuration. The theme can be modified in the tailwind.config.ts file.
+- Feel free to use this [Figma file](https://www.figma.com/proto/Zxm0uIrBUzQ8p8iMKFNUOH/Augii-Official?node-id=8342-16199&t=USSgYJ3HyPS1e6j2-0&scaling=min-zoom&content-scaling=fixed&page-id=7211:118&starting-point-node-id=8236:51138) as a reference.

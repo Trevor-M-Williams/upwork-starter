@@ -1,12 +1,33 @@
 "use client";
 
-import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  InfoWindow,
+} from "@react-google-maps/api";
 import { useMemo, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const pointsOfInterest = [
-  { id: 1, position: { lat: 40.7128, lng: -74.0060 }, title: "New York City", description: "The Big Apple" },
-  { id: 2, position: { lat: 34.0522, lng: -118.2437 }, title: "Los Angeles", description: "City of Angels" },
-  { id: 3, position: { lat: 41.8781, lng: -87.6298 }, title: "Chicago", description: "The Windy City" },
+  {
+    id: 1,
+    position: { lat: 40.7128, lng: -74.006 },
+    title: "New York City",
+    description: "The Big Apple",
+  },
+  {
+    id: 2,
+    position: { lat: 34.0522, lng: -118.2437 },
+    title: "Los Angeles",
+    description: "City of Angels",
+  },
+  {
+    id: 3,
+    position: { lat: 41.8781, lng: -87.6298 },
+    title: "Chicago",
+    description: "The Windy City",
+  },
 ];
 
 const mapContainerStyle = {
@@ -20,8 +41,22 @@ const center = {
   lng: -98.5795,
 };
 
+function MapSkeleton() {
+  return (
+    <div className="h-full w-full">
+      <div className="h-full w-full rounded-xl">
+        <Skeleton className="h-full w-full" />
+      </div>
+    </div>
+  );
+}
+
 export function MapView() {
-  const [selectedMarker, setSelectedMarker] = useState<typeof pointsOfInterest[0] | null>(null);
+  const [selectedMarker, setSelectedMarker] = useState<
+    (typeof pointsOfInterest)[0] | null
+  >(null);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   const options = useMemo(
     () => ({
@@ -30,12 +65,16 @@ export function MapView() {
       scrollwheel: true,
       styles: [],
     }),
-    []
+    [],
   );
 
   return (
-    <div className="grow w-full p-8">
-      <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+    <div className="w-full grow p-8">
+      {isLoading && <MapSkeleton />}
+      <LoadScript
+        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+        onLoad={() => setIsLoading(false)}
+      >
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={4}
@@ -65,4 +104,4 @@ export function MapView() {
       </LoadScript>
     </div>
   );
-} 
+}

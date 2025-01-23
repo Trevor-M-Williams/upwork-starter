@@ -38,10 +38,6 @@ function Breadcrumbs() {
             .replace(/-/g, " ")
             .replace(/\b\w/g, (l) => l.toUpperCase());
 
-          if (index === 1) {
-            title = "Company";
-          }
-
           let href = `/${breadcrumbs.slice(0, index + 1).join("/")}`;
 
           return (
